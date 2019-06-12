@@ -76,27 +76,6 @@ Resources:
       BucketName: !Sub ${AWS::StackName}-frontend-${AWS::AccountId}
       WebsiteConfiguration:
         IndexDocument: index.html
-  PopulateFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      FunctionName: !Sub ${AWS::StackName}-PopulateFunction
-      Description: !Sub
-        - Stack ${StackTagName} Environment ${EnvironmentTagName} Function ${ResourceName}
-        - ResourceName: PopulateFunction
-      CodeUri: src/PopulateFunction
-      Handler: index.handler
-      Runtime: nodejs10.x
-      MemorySize: 3008
-      Timeout: 30
-      Tracing: Active
-      Policies:
-        - AWSXrayWriteOnlyAccess
-        - S3CrudPolicy:
-            BucketName: !Ref FrontEnd
-      Environment:
-        Variables:
-          BUCKET_NAME: !Ref FrontEnd
-          BUCKET_ARN: !GetAtt FrontEnd.Arn
   ItemApi:
     Type: AWS::Serverless::Api
     Properties:
@@ -124,6 +103,27 @@ Resources:
       EndpointConfiguration: REGIONAL
       TracingEnabled: true
       Cors: '''*'''
+  PopulateFrontend:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${AWS::StackName}-PopulateFrontend
+      Description: !Sub
+        - Stack ${StackTagName} Environment ${EnvironmentTagName} Function ${ResourceName}
+        - ResourceName: PopulateFrontend
+      CodeUri: src/PopulateFrontend
+      Handler: index.handler
+      Runtime: nodejs10.x
+      MemorySize: 3008
+      Timeout: 30
+      Tracing: Active
+      Policies:
+        - AWSXrayWriteOnlyAccess
+        - S3CrudPolicy:
+            BucketName: !Ref FrontEnd
+      Environment:
+        Variables:
+          BUCKET_NAME: !Ref FrontEnd
+          BUCKET_ARN: !GetAtt FrontEnd.Arn
 Parameters:
   StackTagName:
     Type: String
