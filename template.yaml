@@ -1,33 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 Transform: AWS::Serverless-2016-10-31
 Resources:
-  RestApi:
-    Type: AWS::Serverless::Api
-    Properties:
-      Name: !Sub
-        - ${ResourceName} From Stack ${StackTagName} Environment ${EnvironmentTagName}
-        - ResourceName: RestApi
-      StageName: !Ref EnvironmentAPIGatewayStageName
-      DefinitionBody:
-        swagger: '2.0'
-        info: {}
-        paths:
-          /:
-            get:
-              x-amazon-apigateway-integration:
-                httpMethod: POST
-                type: aws_proxy
-                uri: !Sub arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${getItems.Arn}/invocations
-              responses: {}
-            post:
-              x-amazon-apigateway-integration:
-                httpMethod: POST
-                type: aws_proxy
-                uri: !Sub arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${postItem.Arn}/invocations
-              responses: {}
-      EndpointConfiguration: REGIONAL
-      TracingEnabled: true
-      Cors: '''*'''
   getItems:
     Type: AWS::Serverless::Function
     Properties:
@@ -46,12 +19,12 @@ Resources:
         - DynamoDBCrudPolicy:
             TableName: !Ref ItemTable
       Events:
-        RestApiGET:
+        ItemApiGET:
           Type: Api
           Properties:
             Path: /
             Method: GET
-            RestApiId: !Ref RestApi
+            RestApiId: !Ref ItemApi
       Environment:
         Variables:
           TABLE_NAME: !Ref ItemTable
@@ -74,12 +47,12 @@ Resources:
         - DynamoDBCrudPolicy:
             TableName: !Ref ItemTable
       Events:
-        RestApiPOST:
+        ItemApiPOST:
           Type: Api
           Properties:
             Path: /
             Method: POST
-            RestApiId: !Ref RestApi
+            RestApiId: !Ref ItemApi
       Environment:
         Variables:
           TABLE_NAME: !Ref ItemTable
@@ -124,6 +97,33 @@ Resources:
         Variables:
           BUCKET_NAME: !Ref FrontEnd
           BUCKET_ARN: !GetAtt FrontEnd.Arn
+  ItemApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: !Sub
+        - ${ResourceName} From Stack ${StackTagName} Environment ${EnvironmentTagName}
+        - ResourceName: ItemApi
+      StageName: !Ref EnvironmentAPIGatewayStageName
+      DefinitionBody:
+        swagger: '2.0'
+        info: {}
+        paths:
+          /:
+            get:
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri: !Sub arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${getItems.Arn}/invocations
+              responses: {}
+            post:
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri: !Sub arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${postItem.Arn}/invocations
+              responses: {}
+      EndpointConfiguration: REGIONAL
+      TracingEnabled: true
+      Cors: '''*'''
 Parameters:
   StackTagName:
     Type: String
